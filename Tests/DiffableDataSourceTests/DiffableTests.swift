@@ -1,5 +1,5 @@
 import XCTest
-@testable import Diffable
+@testable import DiffableDataSource
 
 final class DiffableTests: XCTestCase {
     func testExample() {
