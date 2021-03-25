@@ -29,8 +29,6 @@ final class DiffableTests: XCTestCase {
     let middleSection = DiffableSection<Section, Row>(identifier: .middle, rows: [.item(UUID()), .item(UUID())])
     let bottomSection = DiffableSection<Section, Row>(identifier: .bottom, rows: [.footerElement])
 
-    lazy var content = [topSection, middleSection, bottomSection]
-
     // MARK: - Overrides
 
     override func setUpWithError() throws {
@@ -47,35 +45,45 @@ final class DiffableTests: XCTestCase {
         )
     }
 
-    func testReplaceEmpty() {
-        XCTAssertNoThrow(try dataSource.replace(with: []))
+    func testReplaceEmpty() throws {
+        let content: [DiffableSection<Section, Row>] = []
+
+        try dataSource.replace(with: content)
+
         XCTAssertTrue(dataSource.snapshot().sectionIdentifiers.isEmpty)
         XCTAssertTrue(dataSource.snapshot().itemIdentifiers.isEmpty)
     }
 
     func testReplaceWithNonUniqueSectionIdentifiers() {
-        XCTAssertThrowsError(try dataSource.replace(with: [topSection, topSection]))
+        let content: [DiffableSection<Section, Row>] = [topSection, topSection]
+
+        XCTAssertThrowsError(try dataSource.replace(with: content)) {
+            XCTAssertEqual($0 as? DiffableError, .sectionsNotUnique)
+        }
     }
 
     func testReplaceWithNonUniqueRowIdentifiers() {
         let wrongBottomSection = DiffableSection<Section, Row>(identifier: .bottom, rows: [.headerElement])
+        let content: [DiffableSection<Section, Row>] = [topSection, wrongBottomSection]
 
-        XCTAssertThrowsError(
-            try dataSource.replace(with: [topSection, wrongBottomSection], animatingDifferences: false)
-        )
+        XCTAssertThrowsError(try dataSource.replace(with: content, animatingDifferences: false)) {
+            XCTAssertEqual($0 as? DiffableError, .rowsNotUnique)
+        }
     }
 
-    func testReplace() {
+    func testReplace() throws {
         let content = [topSection, middleSection, bottomSection]
 
-        XCTAssertNoThrow(try dataSource.replace(with: content, animatingDifferences: false))
+        try dataSource.replace(with: content, animatingDifferences: false)
 
-        XCTAssert(dataSource.snapshot().sectionIdentifiers == content.map { $0.identifier })
-        XCTAssert(dataSource.snapshot().itemIdentifiers == content.flatMap { $0.rows })
+        XCTAssertEqual(dataSource.snapshot().sectionIdentifiers, content.map { $0.identifier })
+        XCTAssertEqual(dataSource.snapshot().itemIdentifiers, content.flatMap { $0.rows })
     }
 
-    func testCanEdit() {
-        XCTAssertNoThrow(try dataSource.replace(with: content, animatingDifferences: false))
+    func testCanEdit() throws {
+        let content = [topSection, middleSection, bottomSection]
+
+        try dataSource.replace(with: content, animatingDifferences: false)
 
         XCTAssertFalse(dataSource.tableView(tableView, canEditRowAt: IndexPath(row: 0, section: 0)))
         XCTAssertTrue(dataSource.tableView(tableView, canEditRowAt: IndexPath(row: 0, section: 1)))
@@ -83,22 +91,34 @@ final class DiffableTests: XCTestCase {
         XCTAssertFalse(dataSource.tableView(tableView, canEditRowAt: IndexPath(row: 0, section: 2)))
     }
 
-    func testSectionAt() {
-        XCTAssertNoThrow(try dataSource.replace(with: content, animatingDifferences: false))
+    func testSectionAt() throws {
+        let content = [topSection, middleSection, bottomSection]
+
+        try dataSource.replace(with: content, animatingDifferences: false)
 
         for index in 0..<content.count {
-            XCTAssertTrue(dataSource.section(at: index) == content[index].identifier)
+            XCTAssertEqual(
+                dataSource.section(at: index),
+                content[index].identifier,
+                "Wrong section at index (\(index))"
+            )
         }
     }
 
-    func testRowAt() {
+    func testRowAt() throws {
         let content = [topSection, middleSection, bottomSection]
 
-        XCTAssertNoThrow(try dataSource.replace(with: content, animatingDifferences: false))
+        try dataSource.replace(with: content, animatingDifferences: false)
 
         for section in 0..<content.count {
             for row in 0..<content[section].rows.count {
-                XCTAssertTrue(dataSource.row(at: IndexPath(row: row, section: section)) == content[section].rows[row])
+                let indexPath = IndexPath(row: row, section: section)
+
+                XCTAssertEqual(
+                    dataSource.row(at: indexPath),
+                    content[section].rows[row],
+                    "Wrong row at indexPath (\(row))"
+                )
             }
         }
     }
