@@ -1,3 +1,3 @@
-# doist-apple-diffable-swift-package
+# doist-apple-diffable-datasource
 
 Doist Apple's implementation to use UITableViewDiffableDataSource
