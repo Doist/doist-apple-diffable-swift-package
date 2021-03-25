@@ -4,7 +4,7 @@ Doist's implementation to use UITableViewDiffableDataSource.
 
 # How to use
 
-Import DiffableDataSource by ading this package dependecy to your project on XCode.
+Import DiffableDataSource by adding this package dependency to your project in Xcode.
 
 # Changelog
 
