@@ -1,7 +1,8 @@
+import Combine
 import XCTest
 @testable import DiffableDataSource
 
-final class DiffableTests: XCTestCase {
+final class DiffableTests: XCTestCase, DiffableViewModel {
     enum Section: Diffable {
         case top
         case middle
@@ -22,6 +23,10 @@ final class DiffableTests: XCTestCase {
         }
     }
 
+    lazy var content: CurrentValueSubject<[DiffableSection<Section, Row>], Never> = .init(
+        [topSection, middleSection, bottomSection]
+    )
+
     let tableView = UITableView()
     var dataSource: DiffableTableViewDataSource<Section, Row>!
 
@@ -40,7 +45,7 @@ final class DiffableTests: XCTestCase {
                 nil
             },
             canEditProvider: { [unowned self] indexPath in
-                self.dataSource.section(at: indexPath.section) == .middle
+                section(at: indexPath.section) == .middle
             }
         )
     }
@@ -92,16 +97,12 @@ final class DiffableTests: XCTestCase {
     }
 
     func testSectionAt() throws {
-        let content = [topSection, middleSection, bottomSection]
+        let content = self.content.value
 
         try dataSource.replace(with: content, animatingDifferences: false)
 
-        for index in 0..<content.count {
-            XCTAssertEqual(
-                dataSource.section(at: index),
-                content[index].identifier,
-                "Wrong section at index (\(index))"
-            )
+        for index in 0..<self.content.value.count {
+            XCTAssertEqual(section(at: index), content[index].identifier, "Wrong section at index (\(index))")
         }
     }
 
@@ -114,11 +115,7 @@ final class DiffableTests: XCTestCase {
             for row in 0..<content[section].rows.count {
                 let indexPath = IndexPath(row: row, section: section)
 
-                XCTAssertEqual(
-                    dataSource.row(at: indexPath),
-                    content[section].rows[row],
-                    "Wrong row at indexPath (\(row))"
-                )
+                XCTAssertEqual(self.row(at: indexPath), content[section].rows[row], "Wrong row at indexPath (\(row))")
             }
         }
     }
