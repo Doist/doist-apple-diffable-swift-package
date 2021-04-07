@@ -57,7 +57,7 @@ final class DiffableTests: XCTestCase {
     func testReplaceWithNonUniqueSectionIdentifiers() {
         let content: [DiffableSection<Section, Row>] = [topSection, topSection]
 
-        DiffableDataSource.configureLogging { error in
+        Dependency.logFault = { error in
             XCTAssertEqual(error, .sectionsNotUnique)
         }
 
@@ -68,7 +68,7 @@ final class DiffableTests: XCTestCase {
         let wrongBottomSection = DiffableSection<Section, Row>(identifier: .bottom, rows: [.headerElement])
         let content: [DiffableSection<Section, Row>] = [topSection, wrongBottomSection]
 
-        DiffableDataSource.configureLogging { error in
+        Dependency.logFault = { error in
             XCTAssertEqual(error, .rowsNotUnique)
         }
 

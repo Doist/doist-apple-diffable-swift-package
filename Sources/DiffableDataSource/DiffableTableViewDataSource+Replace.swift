@@ -17,7 +17,7 @@ extension DiffableTableViewDataSource {
                 self.unsafeReplace(sections: sections, animatingDifferences: animatingDifferences)
 
             case let .failure(error):
-                Logger.shared.log(error: error)
+                logFault(error: error)
             }
         }
     }
