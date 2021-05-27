@@ -11,7 +11,7 @@ extension DiffableTableViewDataSource {
     // MARK: - Public API
 
     public func replace(with sections: [DiffableSection<SectionID, RowID>], animatingDifferences: Bool = true) {
-        switch checkUniqueDiffableSections(sections: sections) {
+        switch checkUniqueDiffable(sections: sections) {
         case let .success(sections):
             self.unsafeReplace(sections: sections, animatingDifferences: animatingDifferences)
 
@@ -20,19 +20,21 @@ extension DiffableTableViewDataSource {
         }
     }
 
-    public func checkUniqueDiffableSections(
+    public func checkUniqueDiffable(
         sections: [DiffableSection<SectionID, RowID>]
     ) -> Result<[DiffableSection<SectionID, RowID>], DiffableError> {
         let sectionIDs = sections.map { $0.identifier }
         let rowIDs = sections.flatMap { $0.rows }
 
-        if sectionIDs.unique().count != sectionIDs.count {
+        guard sectionIDs.unique().count == sectionIDs.count else {
             return .failure(DiffableError.sectionsNotUnique)
-        } else if rowIDs.unique().count != rowIDs.count {
-            return .failure(DiffableError.rowsNotUnique)
-        } else {
-            return .success(sections)
         }
+
+        guard rowIDs.unique().count == rowIDs.count else {
+            return .failure(DiffableError.rowsNotUnique)
+        }
+
+        return .success(sections)
     }
 
     // MARK: - Private API
