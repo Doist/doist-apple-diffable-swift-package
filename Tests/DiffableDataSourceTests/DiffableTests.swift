@@ -25,6 +25,8 @@ final class DiffableTests: XCTestCase {
     let tableView = UITableView()
     var dataSource: DiffableTableViewDataSource<Section, Row>!
 
+    var loggedError: DiffableError!
+
     let topSection = DiffableSection<Section, Row>(identifier: .top, rows: [.headerElement])
     let middleSection = DiffableSection<Section, Row>(identifier: .middle, rows: [.item(UUID()), .item(UUID())])
     let bottomSection = DiffableSection<Section, Row>(identifier: .bottom, rows: [.footerElement])
@@ -43,6 +45,12 @@ final class DiffableTests: XCTestCase {
                 self.dataSource.section(at: indexPath.section) == .middle
             }
         )
+
+        loggedError = nil
+
+        Dependency.logFault = { [weak self] error in
+            self?.loggedError = error
+        }
     }
 
     func testReplaceEmpty() throws {
@@ -57,22 +65,18 @@ final class DiffableTests: XCTestCase {
     func testReplaceWithNonUniqueSectionIdentifiers() {
         let content: [DiffableSection<Section, Row>] = [topSection, topSection]
 
-        Dependency.logFault = { error in
-            XCTAssertEqual(error, .sectionsNotUnique)
-        }
-
         dataSource.replace(with: content)
+
+        XCTAssertEqual(loggedError, .sectionsNotUnique)
     }
 
     func testReplaceWithNonUniqueRowIdentifiers() {
         let wrongBottomSection = DiffableSection<Section, Row>(identifier: .bottom, rows: [.headerElement])
         let content: [DiffableSection<Section, Row>] = [topSection, wrongBottomSection]
 
-        Dependency.logFault = { error in
-            XCTAssertEqual(error, .rowsNotUnique)
-        }
-
         dataSource.replace(with: content, animatingDifferences: false)
+
+        XCTAssertEqual(loggedError, .rowsNotUnique)
     }
 
     func testReplace() throws {
